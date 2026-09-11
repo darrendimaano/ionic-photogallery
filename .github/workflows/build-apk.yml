@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build Ionic Android APK
 
 on:
   push:
@@ -9,94 +9,56 @@ on:
       - main
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
 
     steps:
-      # ----------------------------------------------------------------
-      # 1. Checkout repository code
-      # ----------------------------------------------------------------
-      - name: Checkout Code
+      - name: Checkout project
         uses: actions/checkout@v4
 
-      # ----------------------------------------------------------------
-      # 2. Setup Node.js environment
-      # ----------------------------------------------------------------
-      - name: Setup Node.js
+      - name: Set up Nodejs
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
-      # ----------------------------------------------------------------
-      # 3. Install project dependencies
-      # ----------------------------------------------------------------
-      - name: Install Dependencies
+      - name: Install npm dependencies
         run: npm ci
 
-      # ----------------------------------------------------------------
-      # 4. Build web production assets
-      # ----------------------------------------------------------------
-      - name: Build Web Assets
+      - name: Build Ionic application
         run: npm run build
 
-      # ----------------------------------------------------------------
-      # 5. Setup Java Development Kit (JDK 17)
-      # ----------------------------------------------------------------
-      - name: Setup Java JDK
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
-      # ----------------------------------------------------------------
-      # 6. Add & Sync Android platform with Capacitor
-      # ----------------------------------------------------------------
+      - name: Check Java version
+        run: java -version
+
       - name: Sync Capacitor Android
         run: |
           npx cap add android || true
           npx cap sync android
 
-      # ----------------------------------------------------------------
-      # 7. Setup Android SDK tools
-      # ----------------------------------------------------------------
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      # ----------------------------------------------------------------
-      # 8. Give Gradle execution permission
-      # ----------------------------------------------------------------
       - name: Make Gradle executable
         run: chmod +x android/gradlew
 
-      # ----------------------------------------------------------------
-      # 9. Check Gradle environment
-      # ----------------------------------------------------------------
       - name: Check Gradle version
         working-directory: android
         run: ./gradlew --version
 
-      # ----------------------------------------------------------------
-      # 10. Build Android APK file
-      # ----------------------------------------------------------------
-      - name: Build APK
+      - name: Build Android APK
         working-directory: android
         run: ./gradlew assembleDebug
 
-      # ----------------------------------------------------------------
-      # 11. Rename and prepare output APK
-      # ----------------------------------------------------------------
-      - name: Prepare APK File
-        run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk PhotoGallery.apk
+      - name: photo-gallery.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk photo-gallery.apk
 
-      # ----------------------------------------------------------------
-      # 12. Upload APK to GitHub Actions
-      # ----------------------------------------------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: PhotoGallery-APK
-          path: PhotoGallery.apk
+          path: photo-gallery.apk
           if-no-files-found: error
           retention-days: 30
